@@ -1,0 +1,1284 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Player Decision Persona Dashboard</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --paper: rgba(255, 250, 241, 0.92);
+      --panel: #fffaf0;
+      --panel-strong: #f7ead4;
+      --line: #d6c6a7;
+      --ink: #1f1b15;
+      --muted: #6d6253;
+      --accent: #b14f2d;
+      --accent-2: #204f45;
+      --accent-3: #8c6b22;
+      --shadow: 0 20px 48px rgba(76, 50, 21, 0.12);
+      --board-light: #ecd89b;
+      --board-dark: #b8893a;
+      --good: #2f714c;
+      --bad: #962f2f;
+      --warn: #9a6f1c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(177, 79, 45, 0.14), transparent 28%),
+        radial-gradient(circle at 80% 20%, rgba(32, 79, 69, 0.12), transparent 26%),
+        linear-gradient(180deg, #f8f2e8 0%, var(--bg) 100%);
+    }
+
+    .shell {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero,
+    .panel,
+    .stat-card,
+    .skill-tab,
+    .position-card {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 28px;
+      background:
+        linear-gradient(140deg, rgba(177, 79, 45, 0.12), rgba(255, 250, 241, 0.96)),
+        var(--paper);
+      margin-bottom: 18px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, 420px);
+      gap: 18px;
+      align-items: end;
+    }
+
+    h1, h2, h3, p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2.1rem, 4vw, 4rem);
+      line-height: 0.95;
+      margin-bottom: 14px;
+    }
+
+    .hero-copy {
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 68ch;
+    }
+
+    .hero-note {
+      padding: 18px;
+      background: rgba(255, 248, 233, 0.9);
+    }
+
+    .hero-note h2 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+    }
+
+    .hero-note p {
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .stat-card {
+      background: var(--panel);
+      padding: 18px;
+    }
+
+    .stat-card .label {
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 0.75rem;
+      margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+
+    .stat-card .detail {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--paper);
+      padding: 18px;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 18px;
+    }
+
+    .sidebar h2,
+    .main h2 {
+      font-size: 1.1rem;
+      margin-bottom: 12px;
+    }
+
+    .coverage-list,
+    .gap-list,
+    .focus-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+      font-size: 0.9rem;
+      width: fit-content;
+    }
+
+    .chip.good::before,
+    .chip.gap::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .chip.good::before {
+      background: var(--good);
+    }
+
+    .chip.gap::before {
+      background: var(--warn);
+    }
+
+    .skill-tabs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .skill-tab {
+      appearance: none;
+      font: inherit;
+      color: inherit;
+      background: #fffdfa;
+      padding: 14px;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .skill-tab.active {
+      background: linear-gradient(135deg, rgba(177, 79, 45, 0.15), rgba(255, 250, 240, 1));
+      border-color: var(--accent);
+    }
+
+    .skill-tab .skill-name {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .skill-tab .skill-meta {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.35;
+    }
+
+    .skill-overview {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(290px, 420px);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .overview-card {
+      padding: 20px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: #fffdfa;
+    }
+
+    .overview-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    .overview-card p {
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .reason-bars {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+      font-size: 0.92rem;
+    }
+
+    .bar-track {
+      background: #efe4d1;
+      border-radius: 999px;
+      overflow: hidden;
+      height: 11px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(300px, 420px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .board-card,
+    .detail-card,
+    .position-list {
+      padding: 18px;
+      border-radius: 24px;
+      border: 1px solid var(--line);
+      background: #fffdfa;
+    }
+
+    .board-card h3,
+    .detail-card h3,
+    .position-list h3 {
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+
+    .board-wrap {
+      width: 100%;
+      max-width: 380px;
+      margin: 0 auto;
+    }
+
+    .board-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      border: 5px solid #f8f0db;
+      box-shadow: 0 12px 26px rgba(74, 55, 13, 0.16);
+    }
+
+    .square {
+      aspect-ratio: 1 / 1;
+      display: grid;
+      place-items: center;
+      position: relative;
+      padding: 6px;
+    }
+
+    .piece-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      user-select: none;
+      pointer-events: none;
+      filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18));
+    }
+
+    .square.light {
+      background: var(--board-light);
+    }
+
+    .square.dark {
+      background: var(--board-dark);
+    }
+
+    .square .coord {
+      position: absolute;
+      bottom: 4px;
+      right: 5px;
+      font-size: 0.58rem;
+      color: rgba(0, 0, 0, 0.45);
+    }
+
+    .meta-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .pill {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+      font-size: 0.8rem;
+    }
+
+    .pill.severity-blunder { background: #f3d8d8; }
+    .pill.severity-mistake { background: #f0ddcc; }
+    .pill.severity-inaccuracy { background: #efe6c8; }
+
+    .detail-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .detail-block {
+      padding-top: 12px;
+      border-top: 1px solid rgba(214, 198, 167, 0.75);
+    }
+
+    .detail-block .label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+
+    .detail-block .value {
+      line-height: 1.55;
+    }
+
+    .position-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .position-list-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(214, 198, 167, 0.75);
+      margin-bottom: 4px;
+    }
+
+    .position-list-summary {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .position-page-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pager-button[disabled] {
+      opacity: 0.45;
+      cursor: default;
+      transform: none;
+    }
+
+    .position-card {
+      background: #fffcf6;
+      padding: 16px;
+      cursor: pointer;
+    }
+
+    .position-card.active {
+      border-color: var(--accent);
+      background: linear-gradient(135deg, rgba(177, 79, 45, 0.12), rgba(255, 252, 246, 1));
+    }
+
+    .position-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+      margin-bottom: 8px;
+    }
+
+    .position-title {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .position-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .cpl {
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .copy-button {
+      appearance: none;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+    }
+
+    .copy-button:hover {
+      border-color: var(--accent);
+      background: #f3e1c2;
+      transform: translateY(-1px);
+    }
+
+    .copy-button.copied {
+      background: #d8eadf;
+      border-color: var(--good);
+      color: #1f5333;
+    }
+
+    .detail-copy-row {
+      margin-top: 10px;
+    }
+
+    .footnote {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 1220px) {
+      .layout,
+      .workspace,
+      .skill-overview,
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: static;
+      }
+
+      .board-wrap {
+        max-width: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-grid">
+        <div>
+          <h1>Player Decision Persona Dashboard</h1>
+          <p class="hero-copy">
+            This view turns the full game sample into a broader decision-persona dashboard. It highlights
+            repeated habits in both mistakes and successful choices, then lets you inspect the concrete
+            positions behind each lens.
+          </p>
+        </div>
+        <div class="hero-note">
+          <h2>Reading Note</h2>
+          <p>
+            Some lenses are still stronger on failure evidence than on positive style evidence, but this rebuild
+            now includes non-error decisions as well, so the page can show both what players miss and what they handle well.
+          </p>
+        </div>
+      </div>
+      <div class="stats" id="top-stats"></div>
+    </section>
+
+    <section class="layout">
+      <aside class="panel sidebar">
+        <h2>Coverage</h2>
+        <div class="coverage-list" id="coverage-list"></div>
+
+        <div class="detail-block">
+          <div class="label">Underrepresented Axes</div>
+          <div class="gap-list" id="gap-list"></div>
+        </div>
+
+        <div class="detail-block">
+          <div class="label">What This Bank Detects Best</div>
+          <div class="focus-list" id="focus-list"></div>
+        </div>
+      </aside>
+
+      <main class="panel main">
+        <h2>Decision Lenses</h2>
+        <div class="skill-tabs" id="skill-tabs"></div>
+
+        <section class="skill-overview">
+          <div class="overview-card">
+            <h3 id="skill-title"></h3>
+            <p id="skill-summary"></p>
+            <div class="reason-bars" id="reason-bars"></div>
+          </div>
+          <div class="overview-card">
+            <h3>Evidence Mix</h3>
+            <p id="skill-meta" class="footnote"></p>
+            <p id="skill-caveat" class="footnote"></p>
+          </div>
+        </section>
+
+        <section class="workspace">
+          <div class="board-card">
+            <h3>Position Board</h3>
+            <div class="board-wrap">
+              <div class="board-grid" id="board"></div>
+            </div>
+            <div class="meta-pills" id="board-pills"></div>
+          </div>
+
+          <div class="detail-grid">
+            <div class="detail-card">
+              <h3 id="detail-head"></h3>
+              <div class="detail-grid">
+                <div class="detail-block">
+                  <div class="label">Game</div>
+                  <div class="value" id="detail-game"></div>
+                </div>
+                <div class="detail-block">
+                  <div class="label">Move Pair</div>
+                  <div class="value" id="detail-moves"></div>
+                </div>
+                <div class="detail-block">
+                  <div class="label">Why It Fits This Skill</div>
+                  <div class="value" id="detail-why"></div>
+                </div>
+                <div class="detail-block">
+                  <div class="label">Framework Tag</div>
+                  <div class="value" id="detail-framework"></div>
+                </div>
+                <div class="detail-block">
+                  <div class="label">Position Type</div>
+                  <div class="value" id="detail-type"></div>
+                </div>
+                <div class="detail-block">
+                  <div class="label">FEN</div>
+                  <div class="value" id="detail-fen" style="font-size:0.92rem; word-break: break-all;"></div>
+                  <div class="detail-copy-row">
+                    <button class="copy-button" id="detail-copy-fen" type="button">Copy FEN</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="position-list">
+              <h3>All Lens Positions</h3>
+              <div class="position-list-controls">
+                <div class="position-list-summary" id="position-list-summary"></div>
+                <div class="position-page-buttons">
+                  <button class="copy-button pager-button" id="position-page-first" type="button">First</button>
+                  <button class="copy-button pager-button" id="position-page-prev" type="button">Previous</button>
+                  <button class="copy-button pager-button" id="position-page-next" type="button">Next</button>
+                  <button class="copy-button pager-button" id="position-page-last" type="button">Last</button>
+                </div>
+              </div>
+              <div id="position-list"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </section>
+  </div>
+
+  <script src="./persona-dashboard-data.js"></script>
+  <script>
+    const persona = window.PERSONA_DASHBOARD_DATA || {
+      goodCoverage: ["Calculation", "Practical play", "Threat awareness", "Positional judgment", "Opening play", "Endgame", "Defense"],
+      weakCoverage: ["Strategic", "Imaginative", "Endgame Theory"],
+      strongestSignals: [
+        "forcing moments and only-move failures",
+        "material decisions and practical conversion choices",
+        "final safety scans and loose-piece awareness",
+        "quiet plan selection in non-forcing middlegames",
+        "technical endgame conversion and defense"
+      ],
+      skills: [
+        {
+          id: "calculation",
+          name: "Calculation",
+          summary: "Best for spotting whether a player survives forcing positions, finds only moves, and handles tactical move ordering under pressure.",
+          caveat: "This bank mostly shows missed precision rather than positive tactical brilliance, so it measures failure patterns more than attacking style.",
+          positions: [
+            {
+              date: "2025.05.18",
+              game: "Simonov, Timotej vs Sipos, Nathan",
+              focus: "Sipos, Nathan",
+              color: "Black",
+              move: "19...Rf6",
+              best: "19...Rg8",
+              severity: "Blunder",
+              cpl: 1450,
+              framework: "ONLY_MOVE_MISSED",
+              types: ["forcing", "defense", "critical moment"],
+              why: "This is a pure precision moment where one defensive resource worked and the played move collapsed.",
+              fen: "r1b1qr2/pp2p1k1/3p3R/5pp1/2PP4/3B2P1/PPQ2PP1/2K4R b - - 2 19"
+            },
+            {
+              date: "2025.05.13",
+              game: "Matejova, Lada vs Florekova, Lucia",
+              focus: "Matejova, Lada",
+              color: "White",
+              move: "32.dxe5",
+              best: "32.Qxa6",
+              severity: "Blunder",
+              cpl: 1295,
+              framework: "ONLY_MOVE_MISSED",
+              types: ["forcing", "initiative", "critical moment"],
+              why: "The position demanded concrete move ordering, and the quieter capture missed the decisive tactical resource.",
+              fen: "r4k1r/p7/q1p5/4npB1/1R1P2n1/2P3b1/P3Q3/3R2K1 w - - 0 32"
+            }
+          ]
+        },
+        {
+          id: "practical-play",
+          name: "Practical Play",
+          summary: "Best for showing when players choose the wrong material route, cash out too late, or chase their own idea instead of the cleanest practical win.",
+          caveat: "The current examples emphasize material-count errors, so this axis is more about missed practical efficiency than creative resourcefulness.",
+          positions: [
+            {
+              date: "2025.05.14",
+              game: "Stricova, Viktoria Lea vs Miturova, Karolina",
+              focus: "Miturova, Karolina",
+              color: "Black",
+              move: "22...d3",
+              best: "22...fxe6",
+              severity: "Blunder",
+              cpl: 1679,
+              framework: "MATERIAL_GREED",
+              types: ["forcing", "material decision", "counterplay"],
+              why: "The played move chased its own idea instead of taking the cleaner material route first.",
+              fen: "2r2rk1/1p3ppp/p3P2q/3n2NN/3p1PQ1/7P/PP4P1/4RRK1 b - - 0 22"
+            },
+            {
+              date: "2025.05.15",
+              game: "Stehlikova, Beata vs Stricova, Viktoria Lea",
+              focus: "Stricova, Viktoria Lea",
+              color: "Black",
+              move: "36...Kh4",
+              best: "36...Qxe3",
+              severity: "Blunder",
+              cpl: 1331,
+              framework: "MATERIAL_GREED",
+              types: ["forcing", "material decision"],
+              why: "The practical priority was immediate liquidation and gain, but the chosen move drifted away from the strongest cash-out.",
+              fen: "8/8/2Q4p/p4pk1/3Pp3/P1P1Pq1P/1P3p2/5K2 b - - 4 36"
+            }
+          ]
+        },
+        {
+          id: "threat-awareness",
+          name: "Threat Awareness",
+          summary: "Best for testing whether a player performs the last safety scan before moving and rechecks loose pieces after a natural-looking capture.",
+          caveat: "This lens is very reliable in the current sample because the same oversight patterns repeat across different structures and game stages.",
+          positions: [
+            {
+              date: "2025.06.11",
+              game: "Falck, Aaron vs Fuchs, Louis Joel",
+              focus: "Fuchs, Louis Joel",
+              color: "Black",
+              move: "31...Qxg5+",
+              best: "31...Be3+",
+              severity: "Blunder",
+              cpl: 1638,
+              framework: "NO_SAFETY_CHECK",
+              types: ["forcing", "opponent-threat check"],
+              why: "The player found a forcing idea, but not the right forcing idea; the miss was in the final safety scan.",
+              fen: "5k2/p2p4/bpp2qp1/6N1/2P2b1Q/8/PPr4P/5RK1 b - - 2 31"
+            },
+            {
+              date: "2025.05.15",
+              game: "Stehlikova, Beata vs Stricova, Viktoria Lea",
+              focus: "Stricova, Viktoria Lea",
+              color: "Black",
+              move: "31...Nxe3",
+              best: "31...Qg6",
+              severity: "Blunder",
+              cpl: 1242,
+              framework: "HANGING_PIECE_BLINDNESS",
+              types: ["forcing", "loose-piece check"],
+              why: "A natural-looking capture ignored the vulnerability of the resulting piece placement and replies.",
+              fen: "2Q5/2p2k2/2p4p/p2n1p1q/3Pp3/P1P1Bp1P/1P3P1K/8 b - - 3 31"
+            }
+          ]
+        },
+        {
+          id: "positional-judgment",
+          name: "Positional Judgment",
+          summary: "Best for showing quiet plan selection: whether a player improves coordination, picks the right structure change, and evaluates non-forcing continuations accurately.",
+          caveat: "Because the source is still error-centric, this shows weak plan choice more clearly than stable positional maturity.",
+          positions: [
+            {
+              date: "2025.05.02",
+              game: "Blanarova, Anna vs Kocifajova, Martina",
+              focus: "Kocifajova, Martina",
+              color: "Black",
+              move: "18...c4",
+              best: "18...Qa6",
+              severity: "Mistake",
+              cpl: 199,
+              framework: "EVAL_MISREAD",
+              types: ["non-forcing", "quiet", "plan choice"],
+              why: "This is a classic plan-selection miss where the chosen pawn advance underperformed versus a stronger improving move.",
+              fen: "4rrk1/pp1n1ppp/8/q1pp1b2/5B2/1P3NPP/PQP1PPB1/5K1R b - - 5 18"
+            },
+            {
+              date: "2025.05.02",
+              game: "Kocifajova, Martina vs Katreniak, Simon",
+              focus: "Katreniak, Simon",
+              color: "Black",
+              move: "24...Be5",
+              best: "24...Qe2",
+              severity: "Mistake",
+              cpl: 199,
+              framework: "EVAL_MISREAD",
+              types: ["non-forcing", "quiet", "coordination"],
+              why: "The side to move chose a plausible piece square but missed the more accurate coordination idea.",
+              fen: "4r1k1/p1p1qrp1/1ppb3B/7Q/6R1/3P2P1/PPP2P1P/5RK1 b - - 0 24"
+            }
+          ]
+        },
+        {
+          id: "opening-play",
+          name: "Opening Play",
+          summary: "Best for showing where automatic opening habits override concrete needs like development, king safety, and tactical response.",
+          caveat: "These examples are very concrete. They reveal opening autopilot more than deep repertoire weakness.",
+          positions: [
+            {
+              date: "2025.05.02",
+              game: "Blanarova, Anna vs Katreniak, Simon",
+              focus: "Blanarova, Anna",
+              color: "White",
+              move: "5.Qc2",
+              best: "5.Nf3",
+              severity: "Blunder",
+              cpl: 592,
+              framework: "OPENING_AUTOPILOT",
+              types: ["opening", "development", "principles vs concrete play"],
+              why: "Development and king safety mattered more than a routine queen move.",
+              fen: "rnb1k1nr/pppp1ppp/5q2/2b1p3/8/2PP2P1/PP1BPP1P/RN1QKBNR w KQkq - 1 5"
+            },
+            {
+              date: "2025.05.02",
+              game: "Baranova, Aleksandra vs Svorca, Lubomir",
+              focus: "Baranova, Aleksandra",
+              color: "White",
+              move: "6.Be2",
+              best: "6.Qe2",
+              severity: "Blunder",
+              cpl: 557,
+              framework: "OPENING_AUTOPILOT",
+              types: ["opening", "concrete response required"],
+              why: "A routine developing move failed to answer the immediate tactical and positional demand of the position.",
+              fen: "rnb1k1nr/pppp1ppp/1b6/8/4q3/3N2P1/PPPP1P1P/RNBQKB1R w KQkq - 0 6"
+            }
+          ]
+        },
+        {
+          id: "endgame",
+          name: "Endgame",
+          summary: "Best for showing technical conversion habits, especially king activity, patience, and whether a player keeps control instead of grabbing the first visible gain.",
+          caveat: "This dashboard shows practical endgame technique, not deep theoretical endgame knowledge.",
+          positions: [
+            {
+              date: "2025.05.13",
+              game: "Vengrin, Leo vs Kolejak, Martin",
+              focus: "Kolejak, Martin",
+              color: "Black",
+              move: "51...Qxa2+",
+              best: "51...Qa4+",
+              severity: "Blunder",
+              cpl: 1805,
+              framework: "CONVERSION_IMPATIENCE",
+              types: ["endgame", "conversion", "queen ending"],
+              why: "The player grabbed a pawn instead of keeping control with the precise checking route.",
+              fen: "8/KPP5/6k1/6P1/2q2Bb1/8/P7/8 b - - 8 51"
+            },
+            {
+              date: "2025.05.11",
+              game: "Scecinova, Stela vs Stricova, Viktoria Lea",
+              focus: "Stricova, Viktoria Lea",
+              color: "Black",
+              move: "56...g5",
+              best: "56...Kf6",
+              severity: "Blunder",
+              cpl: 661,
+              framework: "ENDGAME_TECHNIQUE",
+              types: ["endgame", "king activity", "technical defense"],
+              why: "The technical priority was king activity, but the played pawn move delayed the essential centralization.",
+              fen: "8/8/1p4p1/1P3k2/5P2/4K3/8/8 b - - 5 56"
+            }
+          ]
+        },
+        {
+          id: "defense",
+          name: "Defense",
+          summary: "Best for showing whether a player recognizes when activity is too expensive and the position instead calls for safety, containment, and damage control.",
+          caveat: "These are still tactical defense examples, so they do not fully capture deeper prophylactic defensive skill.",
+          positions: [
+            {
+              date: "2025.06.11",
+              game: "Richter, Felix vs Dimitrov, Simeon",
+              focus: "Richter, Felix",
+              color: "White",
+              move: "14.Bxg6+",
+              best: "14.Nxg5",
+              severity: "Blunder",
+              cpl: 1088,
+              framework: "KING_SAFETY_NEGLECT",
+              types: ["defense", "king safety", "forcing reply risk"],
+              why: "The attacking try ignored defensive priorities and left the king situation too loose.",
+              fen: "rnb1kb2/ppppn2p/6p1/6q1/8/3B1N2/PPPP2PP/RNBKR3 w q - 0 14"
+            },
+            {
+              date: "2025.05.17",
+              game: "Gal, Jakub vs Wandelt, Viliam Gabriel",
+              focus: "Gal, Jakub",
+              color: "White",
+              move: "40.Qc7+",
+              best: "40.Qe2",
+              severity: "Blunder",
+              cpl: 757,
+              framework: "KING_SAFETY_NEGLECT",
+              types: ["defense", "king safety", "endgame defense"],
+              why: "The check looked active, but the position called for a more secure defensive setup.",
+              fen: "8/p4p2/7p/4k1p1/P1Q5/1P2qPP1/3p3P/5K2 w - - 7 40"
+            }
+          ]
+        }
+      ]
+    };
+
+    const pieceMap = {
+      K: "White king", Q: "White queen", R: "White rook", B: "White bishop", N: "White knight", P: "White pawn",
+      k: "Black king", q: "Black queen", r: "Black rook", b: "Black bishop", n: "Black knight", p: "Black pawn"
+    };
+
+    const pieceAssetMap = {
+      K: "./ChessPieces/White-King.svg",
+      Q: "./ChessPieces/White-Queen.svg",
+      R: "./ChessPieces/White-Rook.svg",
+      B: "./ChessPieces/White-Bishop.svg",
+      N: "./ChessPieces/White-Knight.svg",
+      P: "./ChessPieces/White-Pawn.svg",
+      k: "./ChessPieces/Black-King.svg",
+      q: "./ChessPieces/Black-Queen.svg",
+      r: "./ChessPieces/Black-Rook.svg",
+      b: "./ChessPieces/Black-Bishop.svg",
+      n: "./ChessPieces/Black-Knight.svg",
+      p: "./ChessPieces/Black-Pawn.svg"
+    };
+
+    let activeSkillIndex = 0;
+    let activePositionIndex = 0;
+    let activePageIndex = 0;
+    const POSITION_PAGE_SIZE = 24;
+
+    function slugify(value) {
+      return value.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    }
+
+    function parseFenBoard(fen) {
+      const [board] = fen.split(" ");
+      const rows = board.split("/");
+      const squares = [];
+      rows.forEach((row, rankIndex) => {
+        let fileIndex = 0;
+        for (const char of row) {
+          if (/\d/.test(char)) {
+            const count = Number(char);
+            for (let i = 0; i < count; i += 1) {
+              squares.push({
+                piece: "",
+                coord: String.fromCharCode(97 + fileIndex) + (8 - rankIndex)
+              });
+              fileIndex += 1;
+            }
+          } else {
+            squares.push({
+              piece: char,
+              coord: String.fromCharCode(97 + fileIndex) + (8 - rankIndex)
+            });
+            fileIndex += 1;
+          }
+        }
+      });
+      return squares;
+    }
+
+    function severityClass(severity) {
+      return `severity-${severity.toLowerCase()}`;
+    }
+
+    async function copyFenToClipboard(fen, button) {
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(fen);
+        } else {
+          const textarea = document.createElement("textarea");
+          textarea.value = fen;
+          textarea.setAttribute("readonly", "");
+          textarea.style.position = "absolute";
+          textarea.style.left = "-9999px";
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand("copy");
+          textarea.remove();
+        }
+
+        if (button) {
+          const original = button.dataset.label || button.textContent;
+          button.dataset.label = original;
+          button.textContent = "Copied";
+          button.classList.add("copied");
+          window.setTimeout(() => {
+            button.textContent = original;
+            button.classList.remove("copied");
+          }, 1100);
+        }
+      } catch (error) {
+        if (button) {
+          const original = button.dataset.label || button.textContent;
+          button.dataset.label = original;
+          button.textContent = "Copy failed";
+          window.setTimeout(() => {
+            button.textContent = original;
+          }, 1100);
+        }
+      }
+    }
+
+    function renderTopStats() {
+      const totalPositions = persona.selectedMoments || persona.skills.reduce((sum, skill) => sum + skill.positions.length, 0);
+      const allCpls = persona.skills.flatMap((skill) => skill.positions.map((position) => position.cpl));
+      const averageCpl = allCpls.length ? Math.round(allCpls.reduce((sum, cpl) => sum + cpl, 0) / allCpls.length) : 0;
+      const strongest = persona.stats?.supportedLenses || persona.goodCoverage.length;
+      const weak = persona.weakCoverage.length;
+      const gamesAnalyzed = persona.stats?.gamesAnalyzed || persona.gamesAnalyzed || 0;
+      const movesScanned = persona.stats?.movesScanned || persona.movesScanned || 0;
+
+      const stats = [
+        {
+          label: "Selected moments",
+          value: totalPositions,
+          detail: "Chosen from both error and non-error decisions"
+        },
+        {
+          label: "Decision lenses",
+          value: strongest,
+          detail: "Clearly labeled recurring habits drawn from the full sample"
+        },
+        {
+          label: "Games analyzed",
+          value: gamesAnalyzed || "Sample",
+          detail: movesScanned ? `${movesScanned} moves scanned across the corpus` : `Average swing ${averageCpl} CPL in displayed moments`
+        },
+        {
+          label: "Weak coverage",
+          value: weak,
+          detail: "Areas that still need richer positive evidence or theory-specific tagging"
+        }
+      ];
+
+      document.getElementById("top-stats").innerHTML = stats.map((stat) => `
+        <article class="stat-card">
+          <div class="label">${stat.label}</div>
+          <div class="value">${stat.value}</div>
+          <div class="detail">${stat.detail}</div>
+        </article>
+      `).join("");
+    }
+
+    function renderSidebar() {
+      document.getElementById("coverage-list").innerHTML = persona.goodCoverage
+        .map((item) => `<div class="chip good">${item}</div>`)
+        .join("");
+
+      document.getElementById("gap-list").innerHTML = persona.weakCoverage
+        .map((item) => `<div class="chip gap">${item}</div>`)
+        .join("");
+
+      document.getElementById("focus-list").innerHTML = persona.strongestSignals
+        .map((item) => `<div class="chip">${item}</div>`)
+        .join("");
+    }
+
+    function renderSkillTabs() {
+      const container = document.getElementById("skill-tabs");
+      container.innerHTML = persona.skills.map((skill, index) => {
+        const totalEvidence = (skill.positiveCount || 0) + (skill.negativeCount || 0);
+        const maxCpl = Math.max(...skill.positions.map((position) => position.cpl));
+        return `
+          <button class="skill-tab ${index === activeSkillIndex ? "active" : ""}" data-skill-index="${index}" type="button">
+            <div class="skill-name">${skill.name}</div>
+            <div class="skill-meta">${totalEvidence} total moments, all browseable, peak swing ${maxCpl} CPL</div>
+          </button>
+        `;
+      }).join("");
+
+      container.querySelectorAll(".skill-tab").forEach((button) => {
+        button.addEventListener("click", () => {
+          activeSkillIndex = Number(button.dataset.skillIndex);
+          activePositionIndex = 0;
+          activePageIndex = 0;
+          render();
+        });
+      });
+    }
+
+    function renderSkillOverview() {
+      const skill = persona.skills[activeSkillIndex];
+      const totalEvidence = (skill.positiveCount || 0) + (skill.negativeCount || 0);
+      const counts = {};
+      skill.positions.forEach((position) => {
+        counts[position.framework] = (counts[position.framework] || 0) + 1;
+      });
+
+      const bars = Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .map(([framework, count]) => {
+          const width = (count / skill.positions.length) * 100;
+          return `
+            <div>
+              <div class="bar-label">
+                <span>${framework.replaceAll("_", " ")}</span>
+                <span>${count}/${skill.positions.length}</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+            </div>
+          `;
+        })
+        .join("");
+
+      const severityMix = skill.positions.reduce((acc, position) => {
+        acc[position.severity] = (acc[position.severity] || 0) + 1;
+        return acc;
+      }, {});
+
+      document.getElementById("skill-title").textContent = skill.name;
+      document.getElementById("skill-summary").textContent = skill.summary;
+      document.getElementById("reason-bars").innerHTML = bars;
+      document.getElementById("skill-meta").textContent =
+        `Total evidence: ${totalEvidence} moments (${skill.positiveCount || 0} positive, ${skill.negativeCount || 0} negative). ` +
+        `All ${skill.positions.length} positions are available through pagination. Current page mix: ${Object.entries(severityMix).map(([severity, count]) => `${severity} ${count}`).join(", ")}. ` +
+        `Evidence style: ${skill.positions.map((position) => position.types[0]).filter((value, index, array) => array.indexOf(value) === index).join(", ")}.`;
+      document.getElementById("skill-caveat").textContent = skill.caveat;
+    }
+
+    function renderPositionList() {
+      const skill = persona.skills[activeSkillIndex];
+      const totalPositions = skill.positions.length;
+      const totalPages = Math.max(1, Math.ceil(totalPositions / POSITION_PAGE_SIZE));
+      activePageIndex = Math.max(0, Math.min(activePageIndex, totalPages - 1));
+      if (activePositionIndex >= totalPositions) {
+        activePositionIndex = 0;
+      }
+      const requiredPageIndex = Math.floor(activePositionIndex / POSITION_PAGE_SIZE);
+      if (requiredPageIndex !== activePageIndex) {
+        activePageIndex = requiredPageIndex;
+      }
+      const startIndex = activePageIndex * POSITION_PAGE_SIZE;
+      const endIndex = Math.min(totalPositions, startIndex + POSITION_PAGE_SIZE);
+      const pagePositions = skill.positions.slice(startIndex, endIndex);
+      const container = document.getElementById("position-list");
+      document.getElementById("position-list-summary").textContent =
+        `Showing positions ${startIndex + 1}-${endIndex} of ${totalPositions}. Page ${activePageIndex + 1} of ${totalPages}.`;
+
+      const firstButton = document.getElementById("position-page-first");
+      const previousButton = document.getElementById("position-page-prev");
+      const nextButton = document.getElementById("position-page-next");
+      const lastButton = document.getElementById("position-page-last");
+      firstButton.disabled = activePageIndex === 0;
+      previousButton.disabled = activePageIndex === 0;
+      nextButton.disabled = activePageIndex >= totalPages - 1;
+      lastButton.disabled = activePageIndex >= totalPages - 1;
+      firstButton.onclick = () => {
+        if (activePageIndex === 0) {
+          return;
+        }
+        activePageIndex = 0;
+        activePositionIndex = 0;
+        renderPositionList();
+        renderPositionDetail();
+      };
+      previousButton.onclick = () => {
+        if (activePageIndex === 0) {
+          return;
+        }
+        activePageIndex -= 1;
+        activePositionIndex = activePageIndex * POSITION_PAGE_SIZE;
+        renderPositionList();
+        renderPositionDetail();
+      };
+      lastButton.onclick = () => {
+        if (activePageIndex >= totalPages - 1) {
+          return;
+        }
+        activePageIndex = totalPages - 1;
+        activePositionIndex = activePageIndex * POSITION_PAGE_SIZE;
+        renderPositionList();
+        renderPositionDetail();
+      };
+      nextButton.onclick = () => {
+        if (activePageIndex >= totalPages - 1) {
+          return;
+        }
+        activePageIndex += 1;
+        activePositionIndex = activePageIndex * POSITION_PAGE_SIZE;
+        renderPositionList();
+        renderPositionDetail();
+      };
+
+      container.innerHTML = pagePositions.map((position, index) => {
+        const globalIndex = startIndex + index;
+        return `
+        <article class="position-card ${globalIndex === activePositionIndex ? "active" : ""}" data-position-index="${globalIndex}" data-fen="${position.fen}">
+          <div class="position-top">
+            <div>
+              <div class="position-title">${position.focus} as ${position.color}</div>
+              <div class="position-sub">${position.game}</div>
+            </div>
+            <div class="cpl">${position.cpl} CPL</div>
+          </div>
+          <div class="position-sub">${position.move} vs ${position.best}</div>
+          <div class="meta-pills" style="margin-top:10px;">
+            <span class="pill ${severityClass(position.severity)}">${position.severity}</span>
+            <span class="pill">${position.framework.replaceAll("_", " ")}</span>
+            <button class="copy-button copy-fen-button" data-fen="${position.fen}" type="button">Copy FEN</button>
+          </div>
+        </article>
+      `;
+      }).join("");
+
+      container.querySelectorAll(".position-card").forEach((card) => {
+        card.addEventListener("click", () => {
+          activePositionIndex = Number(card.dataset.positionIndex);
+          renderPositionList();
+          renderPositionDetail();
+        });
+      });
+
+      container.querySelectorAll(".copy-fen-button").forEach((button) => {
+        button.addEventListener("click", async (event) => {
+          event.stopPropagation();
+          await copyFenToClipboard(button.dataset.fen, button);
+        });
+      });
+    }
+
+    function renderBoard(fen) {
+      const squares = parseFenBoard(fen);
+      const board = document.getElementById("board");
+      board.innerHTML = squares.map((square, index) => {
+        const rank = Math.floor(index / 8);
+        const file = index % 8;
+        const tone = (rank + file) % 2 === 0 ? "light" : "dark";
+        const pieceMarkup = square.piece
+          ? `<img class="piece-image" src="${pieceAssetMap[square.piece]}" alt="${pieceMap[square.piece]} on ${square.coord}">`
+          : "";
+        return `
+          <div class="square ${tone}">
+            ${pieceMarkup}
+            ${rank === 7 || file === 7 ? `<span class="coord">${square.coord}</span>` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderPositionDetail() {
+      const skill = persona.skills[activeSkillIndex];
+      const position = skill.positions[activePositionIndex];
+      const sideToMove = position.fen.split(" ")[1] === "w" ? "White to move" : "Black to move";
+
+      renderBoard(position.fen);
+
+      document.getElementById("board-pills").innerHTML = [
+        `<span class="pill ${severityClass(position.severity)}">${position.severity}</span>`,
+        `<span class="pill">${position.framework.replaceAll("_", " ")}</span>`,
+        `<span class="pill">${sideToMove}</span>`,
+        ...position.types.map((item) => `<span class="pill">${item}</span>`)
+      ].join("");
+
+      document.getElementById("detail-head").textContent = `${skill.name}: ${position.focus}`;
+      document.getElementById("detail-game").textContent = `${position.date} - ${position.game}`;
+      document.getElementById("detail-moves").textContent = `${position.move} was played. The engine preferred ${position.best}.`;
+      document.getElementById("detail-why").textContent = position.why;
+      document.getElementById("detail-framework").textContent = position.framework.replaceAll("_", " ");
+      document.getElementById("detail-type").textContent = position.types.join(", ");
+      document.getElementById("detail-fen").textContent = position.fen;
+
+      const detailCopyButton = document.getElementById("detail-copy-fen");
+      detailCopyButton.dataset.fen = position.fen;
+      detailCopyButton.onclick = async () => {
+        await copyFenToClipboard(position.fen, detailCopyButton);
+      };
+    }
+
+    function render() {
+      renderSkillTabs();
+      renderSkillOverview();
+      renderPositionList();
+      renderPositionDetail();
+    }
+
+    renderTopStats();
+    renderSidebar();
+    render();
+  </script>
+</body>
+</html>
+
