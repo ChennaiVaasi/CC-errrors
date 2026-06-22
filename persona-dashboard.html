@@ -587,6 +587,10 @@
               <h3 id="detail-head"></h3>
               <div class="detail-grid">
                 <div class="detail-block">
+                  <div class="label">Position ID</div>
+                  <div class="value" id="detail-id" style="font-size:0.92rem; word-break: break-word;"></div>
+                </div>
+                <div class="detail-block">
                   <div class="label">Game</div>
                   <div class="value" id="detail-game"></div>
                 </div>
@@ -964,6 +968,129 @@
       return `severity-${severity.toLowerCase()}`;
     }
 
+
+    const LENS_DISPLAY = {
+      opening_discipline: {
+        name: "Opening Reset",
+        definition: "Do you stop and ask what this exact opening position needs, instead of playing a routine move by habit?"
+      },
+      endgame_conversion: {
+        name: "Winning Endgame Technique",
+        definition: "Can you convert better endings cleanly through king activity, patience, and accurate technique?"
+      },
+      quiet_judgment: {
+        name: "Positional Choice",
+        definition: "Can you choose the best plan in quieter positions where several moves look playable?"
+      },
+      forcing_instinct: {
+        name: "Checks, Captures, Threats",
+        definition: "Do you look for forcing moves first when the position becomes concrete?"
+      },
+      recapture_discipline: {
+        name: "Recapture Recheck",
+        definition: "Do you pause before the automatic recapture and re-evaluate the position?"
+      },
+      material_urgency: {
+        name: "Take It or Leave It Judgment",
+        definition: "Do you handle captures, trades, and material wins correctly when they compete with safety or activity?"
+      },
+      safety_discipline: {
+        name: "Blunder Check",
+        definition: "Do you do a final safety scan for loose pieces, king danger, and tactical punishment before moving?"
+      },
+      defensive_restraint: {
+        name: "Defend First",
+        definition: "When the position is dangerous, can you choose the stabilizing move before chasing activity?"
+      },
+      practical_resilience: {
+        name: "Solid Practical Choices",
+        definition: "Can you find sound useful moves in hard positions even when they are not flashy?"
+      }
+    };
+
+    const FRAMEWORK_DISPLAY = {
+      OPENING_AUTOPILOT: {
+        label: "Routine opening move without a reset",
+        definition: "A normal-looking opening move was played when the position already needed a concrete response."
+      },
+      MISSED_CCT_SCAN: {
+        label: "Missed checks, captures, threats",
+        definition: "A forcing move was available, but the player did not scan forcing moves first."
+      },
+      ONLY_MOVE_MISSED: {
+        label: "Missed the only critical move",
+        definition: "The position had one critical move, but the player treated it like a normal choice."
+      },
+      FORCING_MOVE_IGNORED: {
+        label: "Ignored the forcing move",
+        definition: "The best move was active and concrete, but the player drifted into something quieter."
+      },
+      CANDIDATE_MOVE_PRUNING: {
+        label: "Did not consider the key move",
+        definition: "The best move never properly entered the candidate list."
+      },
+      MATERIAL_GREED: {
+        label: "Grabbed material without a full check",
+        definition: "The player focused too much on winning material and ignored what the position demanded."
+      },
+      EVAL_MISREAD: {
+        label: "Misjudged the position",
+        definition: "The move looked logical, but the player assessed the position wrongly."
+      },
+      HANGING_PIECE_BLINDNESS: {
+        label: "Missed a loose piece",
+        definition: "A piece was left undefended or tactically vulnerable."
+      },
+      NO_SAFETY_CHECK: {
+        label: "Skipped the final blunder check",
+        definition: "The player did not do the last tactical safety scan before moving."
+      },
+      KING_SAFETY_NEGLECT: {
+        label: "Ignored king danger",
+        definition: "The move improved something else but left the king too exposed."
+      },
+      BACK_RANK_NEGLECT: {
+        label: "Forgot the back rank",
+        definition: "A back-rank weakness or tactical threat was missed."
+      },
+      RECAPTURE_AUTOPILOT: {
+        label: "Automatic recapture",
+        definition: "The player recaptured by habit instead of re-evaluating the position."
+      },
+      ENDGAME_TECHNIQUE: {
+        label: "Inaccurate endgame technique",
+        definition: "The ending was understood in broad terms, but handled imprecisely."
+      },
+      CONVERSION_IMPATIENCE: {
+        label: "Rushed the conversion",
+        definition: "The player tried to win too fast instead of converting carefully."
+      },
+      "Accurate forcing choice": {
+        label: "Found the forcing move",
+        definition: "A good concrete move was spotted when the position demanded it."
+      },
+      "Stable non-error decision": {
+        label: "Solid practical move",
+        definition: "A sound non-mistake choice was made even without a flashy tactic."
+      }
+    };
+
+    function lensName(lensId, fallback) {
+      return LENS_DISPLAY[lensId]?.name || fallback;
+    }
+
+    function lensDefinition(lensId, fallback) {
+      return LENS_DISPLAY[lensId]?.definition || fallback;
+    }
+
+    function frameworkLabel(framework) {
+      return FRAMEWORK_DISPLAY[framework]?.label || String(framework || "").replaceAll("_", " ");
+    }
+
+    function frameworkDefinition(framework) {
+      return FRAMEWORK_DISPLAY[framework]?.definition || "Practical label for the recurring decision pattern in this position.";
+    }
+
     async function copyFenToClipboard(fen, button) {
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1010,12 +1137,17 @@
       const weak = persona.weakCoverage.length;
       const gamesAnalyzed = persona.stats?.gamesAnalyzed || persona.gamesAnalyzed || 0;
       const movesScanned = persona.stats?.movesScanned || persona.movesScanned || 0;
+      const sourceMoments = persona.stats?.sourceMoments || persona.sourceMoments || totalPositions;
+      const removedDecisiveMoments = persona.stats?.removedDecisiveMoments || persona.removedDecisiveMoments || 0;
+      const removedOnlyMoveMoments = persona.stats?.removedOnlyMoveMoments || persona.removedOnlyMoveMoments || 0;
 
       const stats = [
         {
-          label: "Selected moments",
+          label: "Balanced moments",
           value: totalPositions,
-          detail: "Chosen from both error and non-error decisions"
+          detail: (removedDecisiveMoments || removedOnlyMoveMoments)
+            ? `${removedDecisiveMoments} decisive positions and ${removedOnlyMoveMoments} forced only-move puzzles removed from ${sourceMoments} source moments`
+            : "Chosen from both error and non-error decisions"
         },
         {
           label: "Decision lenses",
@@ -1045,7 +1177,7 @@
 
     function renderSidebar() {
       document.getElementById("coverage-list").innerHTML = persona.goodCoverage
-        .map((item) => `<div class="chip good">${item}</div>`)
+        .map((item) => `<div class="chip good">${lensName(slugify(item).replaceAll("-", "_"), item)}</div>`) 
         .join("");
 
       document.getElementById("gap-list").innerHTML = persona.weakCoverage
@@ -1064,7 +1196,7 @@
         const maxCpl = Math.max(...skill.positions.map((position) => position.cpl));
         return `
           <button class="skill-tab ${index === activeSkillIndex ? "active" : ""}" data-skill-index="${index}" type="button">
-            <div class="skill-name">${skill.name}</div>
+            <div class="skill-name">${lensName(skill.id, skill.name)}</div>
             <div class="skill-meta">${totalEvidence} total moments, all browseable, peak swing ${maxCpl} CPL</div>
           </button>
         `;
@@ -1095,10 +1227,11 @@
           return `
             <div>
               <div class="bar-label">
-                <span>${framework.replaceAll("_", " ")}</span>
+                <span>${frameworkLabel(framework)}</span>
                 <span>${count}/${skill.positions.length}</span>
               </div>
               <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+              <div style="font-size:0.88rem;color:var(--muted);margin-top:4px;line-height:1.4;">${frameworkDefinition(framework)}</div>
             </div>
           `;
         })
@@ -1109,8 +1242,8 @@
         return acc;
       }, {});
 
-      document.getElementById("skill-title").textContent = skill.name;
-      document.getElementById("skill-summary").textContent = skill.summary;
+      document.getElementById("skill-title").textContent = lensName(skill.id, skill.name);
+      document.getElementById("skill-summary").textContent = lensDefinition(skill.id, skill.summary);
       document.getElementById("reason-bars").innerHTML = bars;
       document.getElementById("skill-meta").textContent =
         `Total evidence: ${totalEvidence} moments (${skill.positiveCount || 0} positive, ${skill.negativeCount || 0} negative). ` +
@@ -1190,14 +1323,15 @@
           <div class="position-top">
             <div>
               <div class="position-title">${position.focus} as ${position.color}</div>
-              <div class="position-sub">${position.game}</div>
+              <div class="position-sub">${position.id}</div>
             </div>
             <div class="cpl">${position.cpl} CPL</div>
           </div>
+          <div class="position-sub">${position.game}</div>
           <div class="position-sub">${position.move} vs ${position.best}</div>
           <div class="meta-pills" style="margin-top:10px;">
             <span class="pill ${severityClass(position.severity)}">${position.severity}</span>
-            <span class="pill">${position.framework.replaceAll("_", " ")}</span>
+            <span class="pill" title="${frameworkDefinition(position.framework)}">${frameworkLabel(position.framework)}</span>
             <button class="copy-button copy-fen-button" data-fen="${position.fen}" type="button">Copy FEN</button>
           </div>
         </article>
@@ -1248,16 +1382,17 @@
 
       document.getElementById("board-pills").innerHTML = [
         `<span class="pill ${severityClass(position.severity)}">${position.severity}</span>`,
-        `<span class="pill">${position.framework.replaceAll("_", " ")}</span>`,
+        `<span class="pill" title="${frameworkDefinition(position.framework)}">${frameworkLabel(position.framework)}</span>`,
         `<span class="pill">${sideToMove}</span>`,
         ...position.types.map((item) => `<span class="pill">${item}</span>`)
       ].join("");
 
-      document.getElementById("detail-head").textContent = `${skill.name}: ${position.focus}`;
+      document.getElementById("detail-head").textContent = `${lensName(skill.id, skill.name)}: ${position.focus}`;
+      document.getElementById("detail-id").textContent = position.id;
       document.getElementById("detail-game").textContent = `${position.date} - ${position.game}`;
       document.getElementById("detail-moves").textContent = `${position.move} was played. The engine preferred ${position.best}.`;
       document.getElementById("detail-why").textContent = position.why;
-      document.getElementById("detail-framework").textContent = position.framework.replaceAll("_", " ");
+      document.getElementById("detail-framework").textContent = `${frameworkLabel(position.framework)} - ${frameworkDefinition(position.framework)}`;
       document.getElementById("detail-type").textContent = position.types.join(", ");
       document.getElementById("detail-fen").textContent = position.fen;
 
